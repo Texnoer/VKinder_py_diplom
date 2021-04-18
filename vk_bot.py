@@ -17,6 +17,14 @@ candidate = {'sex': '',
              'city': '',
              'status': ''}
 
+params = {
+    'start_dialog': False,
+    'input_age': False,
+    'input_status': False,
+    'input_city': False,
+    'ready': False
+    }
+
 
 class VkBot:
 
@@ -61,75 +69,83 @@ class VkBot:
         :return: str
         """
         if message.lower() in first_word:
-            candidate_values['switch'] = 1  #
+            params['start_dialog'] = True
             return f'Здравствуйте {self.username}! Начинаем поиск.\nВыберете пол (М / Ж):'
 
-        elif candidate_values['switch'] == 1 and (message.lower() not in 'мж'):
-            return 'Необходимо ввксти букву "м"  или  "ж"'
+        elif params['start_dialog'] and (message.lower() not in 'мж'):
+            return 'Необходимо ввести букву "м"  или  "ж"'
 
         elif message.lower() == 'инфо':
             return f'Привет {self.username}\n{Search.info.__doc__}'
 
-        elif candidate_values['switch'] == 1 and message.lower() == 'м':
-            candidate_values['switch'] = 2
+        elif params['start_dialog'] and message.lower() == 'м':
+            params['input_age'] = True
+            params['start_dialog'] = False
             candidate_values['sex'] = 2
             candidate['sex'] = 'Мужчина'
             return 'Введите возраст  От - До  (через пробел)'
 
-        elif candidate_values['switch'] == 1 and message.lower() == 'ж':
-            candidate_values['switch'] = 2
+        elif params['start_dialog'] and message.lower() == 'ж':
+            params['input_age'] = True
+            params['start_dialog'] = False
             candidate_values['sex'] = 1
             candidate['sex'] = 'Женщина'
             return 'Введите возраст  От - До  (через пробел)'
 
-        elif candidate_values['switch'] == 2 and len(message.split()) == 2:
+        elif params['input_age'] and message.isalpha():
+            return 'Необходимо ввести ТОЛЬКО циифры через пробел'
+
+        elif params['input_age'] and message.isdigit():
+            return 'Необходимо ввести две циифры ЧЕРЕЗ ПРОБЕЛ'
+
+        elif params['input_age'] and len(message.split()) == 2:
             result = message.split()
             if result[0].isdigit() and result[-1].isdigit():
                 candidate_values['age_from'] = int(result[0])
                 candidate['age_from'] = result[0]
                 candidate_values['age_to'] = int(result[-1])
                 candidate['age_to'] = result[-1]
-                candidate_values['switch'] = 3
-
+                params['input_status'] = True
+                params['input_age'] = False
                 return f'Введите семейное положение.\n{Search.status()}'
 
             else:
                 return 'Ошибка ввода, попробуйте ещё раз'
 
-        elif candidate_values['switch'] == 2 and message.isalpha():
-            return 'Необходимо ввести ТОЛЬКО циифры через пробел'
-
-        elif candidate_values['switch'] == 2 and message.isdigit():
-            return 'Необходимо ввести только циифры ЧЕРЕЗ ПРОБЕЛ'
-
-        elif candidate_values['switch'] == 3 and message not in '12345678':
+        elif params['input_status'] and message not in '12345678':
             return 'Допустимы только цифры от 1 до 8'
 
-        elif candidate_values['switch'] == 3 and message.isdigit():
+        elif params['input_status'] and message in '12345678':
             candidate_values['status'] = int(message)
             candidate['status'] = Search.add_status(message)
-            candidate_values['switch'] = 4
+            params['input_city'] = True
+            params['input_status'] = False
             return 'Введите название города'
 
-        elif candidate_values['switch'] == 4 and message.isalpha():
-            candidate_values['city'] = Search().city_search(message.lower())
-            candidate['city'] = message
-            candidate_values['switch'] = 5
-            return f'Проверьте данные:\n{candidate["sex"]} от {candidate["age_from"]} до {candidate["age_to"]} ' \
-                   f'{candidate["status"]}\nИз города {candidate["city"].capitalize()}' \
-                   f'\nДля запуска поиска введите "старт"\nДля отмены введите "стоп"\nДля корректировки введите "сброс"'
+        elif params['input_city'] and message.isalpha():
+            city_title = Search().city_search(message.lower())
+            if type(city_title) == int:
+                candidate_values['city'] = city_title
+                candidate['city'] = message
+                params['ready'] = True
+                params['input_city'] = False
+                return f'Проверьте данные:\n{candidate["sex"]} от {candidate["age_from"]} до {candidate["age_to"]} ' \
+                       f'{candidate["status"]}\nИз города {candidate["city"].capitalize()}' \
+                       f'\nДля запуска поиска введите "старт"\nДля отмены введите "стоп"\nДля корректировки введите "сброс"'
+            else:
+                return city_title
 
-        elif candidate_values['switch'] == 4 and message.isdigit():
+        elif params['input_city'] and message.isdigit():
             return 'В названии не должно быть цифры'
 
-        elif candidate_values['switch'] == 5 and message.lower() == 'старт':
+        elif params['ready'] and message.lower() == 'старт':
+            params['ready'] = False
             Search().get_search(candidate_values)
             VkSaver().photo_search()
-            print(' итоговый запрос: ', candidate_values)
             return 'Начали поиск'
 
-        elif candidate_values['switch'] == 5 and message.lower() == 'сброс':
-            candidate_values['switch'] = 1
+        elif params['ready'] and message.lower() == 'сброс':
+            params['start_dialog'] = True
             return 'Повторите ввод данных:\nВыберете пол (М / Ж):'
 
         elif message.lower() in last_word:

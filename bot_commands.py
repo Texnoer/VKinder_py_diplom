@@ -1,6 +1,6 @@
 from pprint import pprint
 import requests
-from application.db.user_information import user_service_key, user_token
+from application.db.user_information import user_token
 import time
 
 
@@ -11,7 +11,7 @@ class Search:
 
     def __init__(self):
         self.url = 'http://api.vk.com/method/'
-        self.user_service_key = user_service_key
+        self.user_token = user_token
         self.params = {
                        'v': '5.89',
                        'country_id': '1'
@@ -66,22 +66,26 @@ class Search:
         :return: str
         """
         search_params = {
-            'access_token': user_token,
+            'access_token': self.user_token,
             'sex': candidate_info['sex'],
             'status': candidate_info['status'],
             'age_from': candidate_info['age_from'],
             'age_to': candidate_info['age_to'],
             'city': candidate_info['city'],
             'sort': 0,
-            'count': 10,
+            'count': 100,
             'has_photo': 1
             }
         peoples = requests.get(self.url + 'users.search', params={**self.params, **search_params}).json()['response']['items']
+        # pprint(peoples)
         for person in peoples:
-            link = [person['first_name'] + ' ' + person['last_name'], person['id']]
-            person_id = person['id']
-            links_dict[person_id] = link
-        print(links_dict)
+            if person['is_closed'] is False:
+                link = [person['first_name'] + ' ' + person['last_name'], person['id']]
+                person_id = person['id']
+                links_dict[person_id] = link
+            else:
+                pass
+        # print(links_dict)
 
         return 'запрос выполнен'
 
@@ -92,12 +96,15 @@ class Search:
         :return: int
         """
         search_params = {
-                  'access_token': self.user_service_key,
+                  'access_token': self.user_token,
                   'q': city_title.capitalize(),
                   'count': '10'
                   }
-        city_id = requests.get(self.url + 'database.getCities', params={**self.params, **search_params}).json()['response']['items'][0]['id']
-        return city_id
+        try:
+            city_id = requests.get(self.url + 'database.getCities', params={**self.params, **search_params}).json()['response']['items'][0]['id']
+            return city_id
+        except IndexError:
+            return 'ошибка, нет такого города\nВведите название города'
 
 
 class VkSaver(Search):
@@ -105,6 +112,7 @@ class VkSaver(Search):
         super(VkSaver, self).__init__()
         self.owner_id = owner_id
         self.photo_stock = {}
+        self.candidates_dict = {}
         self.candidates_list = []
 
     def get_photo(self, owner_id, album_id=None):
@@ -117,39 +125,49 @@ class VkSaver(Search):
         if album_id is None:
             album_id = 'profile'
         gp_params = {
-            'access_token': user_token,
+            'access_token': self.user_token,
             'user_id': owner_id,
             'extended': 1,
             'photo_sizes': 1,
             'album_id': album_id
         }
         response = requests.get(self.url + 'photos.get', params={**self.params, **gp_params}).json()
+        # pprint(response)
 
         time.sleep(0.3)
-        try:
-            count_photos = response['response']['count']
+
+        count_photos = response['response']['count']
+        if count_photos >= 3:
+            # print(f"В альбоме {count_photos} фото")
             for items in response['response']['items']:
-                self.photo_stock[items['id']] = [items['likes']['count'], items['sizes'][-1]['url']]
-                time.sleep(0.3)
-            print(f"В альбоме {count_photos} фото")
+                self.photo_stock[items['sizes'][-1]['url']] = items['likes']['count']
 
-        except KeyError:
+                # time.sleep(0.3)
+        else:
             pass
-
-        return self.photo_stock
+        sorted_tuple = sorted(self.photo_stock.items(), key=lambda x: x[1])
+        limited_dict = dict(sorted_tuple[-3:])
+        return limited_dict
+        # return self.photo_stock
 
     def photo_search(self):
         """
         Поиск по списку полученных id
         :return: list
         """
+        # print(links_dict)
         for owner_id in links_dict:
             result = self.get_photo(owner_id)
-            self.candidates_list.append(result)
-        print(self.candidates_list)
-        return self.candidates_list
+            self.photo_stock = {}
+            if result:
+                self.candidates_dict[owner_id] = result
+            # self.candidates_list.append(result)
+        for key, item in self.candidates_dict.items():
+            print(key, '-', item)
+        # print(self.candidates_dict)
+        # print(self.candidates_list)
+        return self.candidates_dict
 
 
 if __name__ == '__main__':
     print('module')
-

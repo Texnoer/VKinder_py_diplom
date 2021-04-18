@@ -5,6 +5,9 @@ import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 
+required_param = 10 ** 7
+
+
 class SearchPeople:
 
     def __init__(self):
@@ -16,7 +19,7 @@ class SearchPeople:
         Функция write_msg получает id пользователя ВК <user_id>,
         которому оно отправит сообщение и собственно само сообщение.
         """
-        self.vk.method('messages.send', {'user_id': user_id, 'message': message,  'random_id': randrange(10 ** 7), })
+        self.vk.method('messages.send', {'user_id': user_id, 'message': message, 'random_id': randrange(required_param)})
 
     def bot_talk(self):
         for event in self.longpoll.listen():
