@@ -8,8 +8,7 @@ candidate_values = {
             'age_from': 0,
             'age_to': 0,
             'city': 0,
-            'status': 0,
-            'switch': 0
+            'status': 0
         }
 candidate = {'sex': '',
              'age_from': 0,
@@ -22,8 +21,10 @@ params = {
     'input_age': False,
     'input_status': False,
     'input_city': False,
-    'ready': False
+    'ready': False,
+    'search_completed': False
     }
+cut_candidates_dict = {}
 
 
 class VkBot:
@@ -140,13 +141,20 @@ class VkBot:
 
         elif params['ready'] and message.lower() == 'старт':
             params['ready'] = False
+            params['search_completed'] = True
             Search().get_search(candidate_values)
-            VkSaver().photo_search()
-            return 'Начали поиск'
+            cut_candidate = VkSaver().photo_search()
+            for key, item in cut_candidate.items():
+                cut_candidates_dict[key] = item
+            return 'Поиск завершен.\n1 - просмотр результатов'
 
         elif params['ready'] and message.lower() == 'сброс':
             params['start_dialog'] = True
             return 'Повторите ввод данных:\nВыберете пол (М / Ж):'
+
+        elif params['search_completed'] and message == '1':
+            print(cut_candidates_dict)
+            return cut_candidates_dict
 
         elif message.lower() in last_word:
             return f"Пока-пока, {self.username}!"

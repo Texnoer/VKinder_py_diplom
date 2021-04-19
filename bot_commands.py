@@ -5,6 +5,7 @@ import time
 
 
 links_dict = {}
+links_dict_sorted = {}
 
 
 class Search:
@@ -73,11 +74,10 @@ class Search:
             'age_to': candidate_info['age_to'],
             'city': candidate_info['city'],
             'sort': 0,
-            'count': 100,
+            'count': 20,
             'has_photo': 1
             }
         peoples = requests.get(self.url + 'users.search', params={**self.params, **search_params}).json()['response']['items']
-        # pprint(peoples)
         for person in peoples:
             if person['is_closed'] is False:
                 link = [person['first_name'] + ' ' + person['last_name'], person['id']]
@@ -85,7 +85,6 @@ class Search:
                 links_dict[person_id] = link
             else:
                 pass
-        # print(links_dict)
 
         return 'запрос выполнен'
 
@@ -113,7 +112,6 @@ class VkSaver(Search):
         self.owner_id = owner_id
         self.photo_stock = {}
         self.candidates_dict = {}
-        self.candidates_list = []
 
     def get_photo(self, owner_id, album_id=None):
         """
@@ -132,41 +130,33 @@ class VkSaver(Search):
             'album_id': album_id
         }
         response = requests.get(self.url + 'photos.get', params={**self.params, **gp_params}).json()
-        # pprint(response)
-
         time.sleep(0.3)
-
         count_photos = response['response']['count']
         if count_photos >= 3:
-            # print(f"В альбоме {count_photos} фото")
+            links_dict_sorted[owner_id] = f"В альбоме {count_photos} фото"
             for items in response['response']['items']:
                 self.photo_stock[items['sizes'][-1]['url']] = items['likes']['count']
-
-                # time.sleep(0.3)
         else:
             pass
         sorted_tuple = sorted(self.photo_stock.items(), key=lambda x: x[1])
         limited_dict = dict(sorted_tuple[-3:])
         return limited_dict
-        # return self.photo_stock
 
     def photo_search(self):
         """
         Поиск по списку полученных id
         :return: list
         """
-        # print(links_dict)
         for owner_id in links_dict:
             result = self.get_photo(owner_id)
             self.photo_stock = {}
             if result:
                 self.candidates_dict[owner_id] = result
-            # self.candidates_list.append(result)
-        for key, item in self.candidates_dict.items():
-            print(key, '-', item)
-        # print(self.candidates_dict)
-        # print(self.candidates_list)
         return self.candidates_dict
+
+    @staticmethod
+    def output():
+        return str(links_dict_sorted)
 
 
 if __name__ == '__main__':
