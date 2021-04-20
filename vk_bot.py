@@ -1,5 +1,6 @@
 import bs4
 
+from application.db.database import get_user_info
 from bot_commands import *
 from application.db.bot_dictionary import first_word, last_word
 
@@ -37,6 +38,7 @@ class VkBot:
         bs = bs4.BeautifulSoup(request.text, "html.parser")
 
         user_name = self._clean_all_tag_from_str(bs.findAll("title")[0])
+        get_user_info(user_id, user_name)
 
         return user_name.split()[0]
 

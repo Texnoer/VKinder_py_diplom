@@ -1,5 +1,7 @@
 from pprint import pprint
 import requests
+
+from application.db.database import get_people_information
 from application.db.user_information import user_token
 import time
 
@@ -78,6 +80,7 @@ class Search:
             'has_photo': 1
             }
         peoples = requests.get(self.url + 'users.search', params={**self.params, **search_params}).json()['response']['items']
+
         for person in peoples:
             if person['is_closed'] is False:
                 link = [person['first_name'] + ' ' + person['last_name'], person['id']]
@@ -145,12 +148,14 @@ class VkSaver(Search):
     def photo_search(self):
         """
         Поиск по списку полученных id
-        :return: list
+        :return: dict
         """
+        print(links_dict)
         for owner_id in links_dict:
             result = self.get_photo(owner_id)
             self.photo_stock = {}
             if result:
+                get_people_information(owner_id)
                 self.candidates_dict[owner_id] = result
         return self.candidates_dict
 

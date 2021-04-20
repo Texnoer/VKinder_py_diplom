@@ -13,3 +13,5 @@ soupsieve==2.1
 tqdm==4.56.0
 urllib3==1.26.3
 vk-api==11.9.1
+
+SQLAlchemy~=1.4.9
