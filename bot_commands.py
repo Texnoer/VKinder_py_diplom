@@ -1,7 +1,7 @@
 from pprint import pprint
 import requests
 
-from application.db.database import get_people_information
+from application.db.database import get_people_information, get_most_of_liked_photos
 from application.db.user_information import user_token
 import time
 
@@ -76,7 +76,7 @@ class Search:
             'age_to': candidate_info['age_to'],
             'city': candidate_info['city'],
             'sort': 0,
-            'count': 20,
+            'count': 200,
             'has_photo': 1
             }
         peoples = requests.get(self.url + 'users.search', params={**self.params, **search_params}).json()['response']['items']
@@ -142,8 +142,8 @@ class VkSaver(Search):
         else:
             pass
         sorted_tuple = sorted(self.photo_stock.items(), key=lambda x: x[1])
-        limited_dict = dict(sorted_tuple[-3:])
-        return limited_dict
+        limited_tuple = sorted_tuple[-3:]
+        return limited_tuple
 
     def photo_search(self):
         """
@@ -151,17 +151,18 @@ class VkSaver(Search):
         :return: dict
         """
         print(links_dict)
-        for owner_id in links_dict:
-            result = self.get_photo(owner_id)
+        for owner_id in list(links_dict.values()):
+            result = self.get_photo(owner_id[-1])
             self.photo_stock = {}
             if result:
                 get_people_information(owner_id)
-                self.candidates_dict[owner_id] = result
+                get_most_of_liked_photos(owner_id[-1], result)
+                self.candidates_dict[owner_id[-1]] = result
         return self.candidates_dict
 
     @staticmethod
     def output():
-        return str(links_dict_sorted)
+        return str(list(links_dict_sorted.values()))
 
 
 if __name__ == '__main__':

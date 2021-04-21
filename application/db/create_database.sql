@@ -15,10 +15,10 @@ create table if not exists search_result (
 
 create table if not exists sorted_data (
     owner_id integer not null,
-    link_photo_1 varchar(200) not null unique,
+    link_photo_1 varchar(400) not null,
     likes_count_photo_1 integer not null,
-    link_photo_2 varchar(200) not null unique,
+    link_photo_2 varchar(400) not null,
     likes_count_photo_2 integer not null,
-    link_photo_3 varchar(200) not null unique,
-    likes_count_photo_3 integer not null,
+    link_photo_3 varchar(400) not null,
+    likes_count_photo_3 integer not null
     );
