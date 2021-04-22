@@ -1,6 +1,6 @@
 import bs4
 
-from application.db.database import get_user_info
+from application.db.database import get_user_info, output_search_result
 from bot_commands import *
 from application.db.bot_dictionary import first_word, last_word
 
@@ -148,15 +148,15 @@ class VkBot:
             cut_candidate = VkSaver().photo_search()
             for key, item in cut_candidate.items():
                 cut_candidates_dict[key] = item
-            return 'Поиск завершен.\n1 - просмотр результатов'
+            return 'Поиск завершен.\nВведите количество кандидатов для отображения'
 
         elif params['ready'] and message.lower() == 'сброс':
             params['start_dialog'] = True
             return 'Повторите ввод данных:\nВыберете пол (М / Ж):'
 
-        elif params['search_completed'] and message == '1':
-            print(cut_candidates_dict)
-            return cut_candidates_dict
+        elif params['search_completed'] and message in '0123456789':
+            response = output_search_result(int(message))
+            return str(response)
 
         elif message.lower() in last_word:
             return f"Пока-пока, {self.username}!"

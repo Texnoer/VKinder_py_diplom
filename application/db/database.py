@@ -55,3 +55,16 @@ def get_most_of_liked_photos(owner_id: int, data: list):
             """
         connection.execute(insert_query)
 
+
+def output_search_result(number_of_candidates):
+    insert_query = f"""SELECT first_name, last_name, link_photo_1 lp1, link_photo_2 lp2, link_photo_3 lp3
+                    FROM sorted_data sd
+                    JOIN search_result sr ON sd.owner_id = sr.owner_id
+                    WHERE sd.likes_count_photo_3 >= 30
+                    LIMIT {number_of_candidates};
+                    """
+    response = connection.execute(insert_query)
+    temp_list = []
+    for line in response:
+        temp_list.append(line)
+    return temp_list
