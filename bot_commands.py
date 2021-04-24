@@ -1,7 +1,7 @@
 from pprint import pprint
 import requests
 
-from application.db.database import get_people_information, get_most_of_liked_photos
+from application.db.database import get_people_information, get_most_of_liked_photos, get_owner_id_list
 from application.db.user_information import user_token
 import time
 
@@ -77,17 +77,17 @@ class Search:
             'city': candidate_info['city'],
             'sort': 0,
             'count': 200,
-            'has_photo': 1
+            'has_photo': 1,
+            'fields': 'bdate'
             }
         peoples = requests.get(self.url + 'users.search', params={**self.params, **search_params}).json()['response']['items']
-
+        owner_id_list = get_owner_id_list()
+        print(" !!!!! owner_id_list", owner_id_list)
         for person in peoples:
             if person['is_closed'] is False:
-                link = [person['first_name'] + ' ' + person['last_name'], person['id']]
-                person_id = person['id']
-                links_dict[person_id] = link
-            else:
-                pass
+                if str(person['id']) not in owner_id_list:
+                    link = [person['first_name'] + ' ' + person['last_name'], person['id']]
+                    links_dict[person['id']] = link
 
         return 'запрос выполнен'
 
@@ -158,6 +158,7 @@ class VkSaver(Search):
                 get_people_information(owner_id)
                 get_most_of_liked_photos(owner_id[-1], result)
                 self.candidates_dict[owner_id[-1]] = result
+        links_dict.clear()
         return self.candidates_dict
 
     @staticmethod

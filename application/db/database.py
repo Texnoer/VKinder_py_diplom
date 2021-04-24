@@ -6,6 +6,7 @@ engine = sqlalchemy.create_engine(f"postgresql://{DB['db_owner']}:{DB['password'
 
 connection = engine.connect()
 user_id = []
+# owner_id_list = []
 
 
 def get_user_info(owner_id: int, user_name: str):
@@ -50,21 +51,39 @@ def get_most_of_liked_photos(owner_id: int, data: list):
 
         insert_query = f"""INSERT INTO sorted_data (owner_id, link_photo_1,
             likes_count_photo_1, link_photo_2, likes_count_photo_2, link_photo_3, likes_count_photo_3)
-            VALUES ({owner_id}, '{link_photo_1}', {likes_count_photo_1}, '{link_photo_2}', {likes_count_photo_2},
+            VALUES ({owner_id},'{link_photo_1}', {likes_count_photo_1}, '{link_photo_2}', {likes_count_photo_2},
             '{link_photo_3}', {likes_count_photo_3})
             """
         connection.execute(insert_query)
 
 
+def get_owner_id_list():
+    id_list = []
+    result = connection.execute("SELECT owner_id FROM viewed_candidates")
+    for owner_id in result:
+        owner_id = str(owner_id)
+        owner_id = owner_id.strip('(,)')
+        id_list.append(owner_id)
+    return id_list
+
+
 def output_search_result(number_of_candidates):
-    insert_query = f"""SELECT first_name, last_name, link_photo_1 lp1, link_photo_2 lp2, link_photo_3 lp3
+    insert_query = f"""SELECT sd.owner_id, first_name, last_name, link_photo_1, link_photo_2, link_photo_3
                     FROM sorted_data sd
                     JOIN search_result sr ON sd.owner_id = sr.owner_id
-                    WHERE sd.likes_count_photo_3 >= 30
                     LIMIT {number_of_candidates};
                     """
     response = connection.execute(insert_query)
     temp_list = []
     for line in response:
-        temp_list.append(line)
+        name = f'{line[1]} {line[2]}'
+        add_owner_id = f"""INSERT INTO viewed_candidates (owner_id, name) VALUES ({int(line[0])}, '{name}')"""
+        connection.execute(add_owner_id)
+        joined_line = f'{name} Photo_1: {line[3]} Photo_2: {line[4]} Photo_3: {line[-1]}'
+        temp_list.append(joined_line)
     return temp_list
+
+
+def clear_database():
+    connection.execute("""TRUNCATE sorted_data; TRUNCATE search_result; TRUNCATE main_user;""")
+    return 'EMPTY DATABASE'

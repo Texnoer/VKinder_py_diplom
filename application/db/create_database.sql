@@ -22,3 +22,8 @@ create table if not exists sorted_data (
     link_photo_3 varchar(400) not null,
     likes_count_photo_3 integer not null
     );
+
+create table if not exists viewed_candidates (
+    owner_id integer not null unique,
+    name varchar(50) not null
+    );

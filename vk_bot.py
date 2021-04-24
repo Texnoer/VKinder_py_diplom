@@ -1,6 +1,6 @@
 import bs4
 
-from application.db.database import get_user_info, output_search_result
+from application.db.database import get_user_info, output_search_result, clear_database
 from bot_commands import *
 from application.db.bot_dictionary import first_word, last_word
 
@@ -140,6 +140,9 @@ class VkBot:
 
         elif params['input_city'] and message.isdigit():
             return 'В названии не должно быть цифры'
+        #
+        # elif params['ready'] and message.lower == 'старт':
+        #     return 'Выполняется поиск, ожидайте\nЭто займет некоторое время'
 
         elif params['ready'] and message.lower() == 'старт':
             params['ready'] = False
@@ -156,6 +159,7 @@ class VkBot:
 
         elif params['search_completed'] and message in '0123456789':
             response = output_search_result(int(message))
+            clear_database()
             return str(response)
 
         elif message.lower() in last_word:
