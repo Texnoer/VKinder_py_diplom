@@ -13,13 +13,16 @@ class SearchPeople:
     def __init__(self):
         self.vk = vk_api.VkApi(token=bot_token)
         self.longpoll = VkLongPoll(self.vk)
+        self.vk_button = self.vk.get_api()
 
     def write_msg(self, user_id, message):
         """
         Функция write_msg получает id пользователя ВК <user_id>,
         которому оно отправит сообщение и собственно само сообщение.
         """
-        self.vk.method('messages.send', {'user_id': user_id, 'message': message, 'random_id': randrange(required_param)})
+        self.vk.method('messages.send', {'user_id': user_id,
+                                         'message': message,
+                                         'random_id': randrange(required_param)})
 
     def bot_talk(self):
         for event in self.longpoll.listen():
@@ -41,4 +44,3 @@ class SearchPeople:
 if __name__ == '__main__':
     search = SearchPeople()
     search.bot_talk()
-

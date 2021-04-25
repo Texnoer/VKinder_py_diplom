@@ -27,3 +27,13 @@ create table if not exists viewed_candidates (
     owner_id integer not null unique,
     name varchar(50) not null
     );
+
+create table if not exists favorites (
+    id serial primary key,
+    owner_id integer not null unique,
+    photo_link varchar(1500) not null
+    );
+
+create table if not exists ban_list (
+    owner_id integer not null
+    );

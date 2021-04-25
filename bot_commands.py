@@ -1,4 +1,3 @@
-from pprint import pprint
 import requests
 
 from application.db.database import get_people_information, get_most_of_liked_photos, get_owner_id_list
@@ -7,7 +6,6 @@ import time
 
 
 links_dict = {}
-links_dict_sorted = {}
 
 
 class Search:
@@ -76,13 +74,12 @@ class Search:
             'age_to': candidate_info['age_to'],
             'city': candidate_info['city'],
             'sort': 0,
-            'count': 200,
-            'has_photo': 1,
-            'fields': 'bdate'
+            'count': 500,
+            'has_photo': 1
             }
-        peoples = requests.get(self.url + 'users.search', params={**self.params, **search_params}).json()['response']['items']
+        peoples = requests.get(self.url + 'users.search', params={
+            **self.params, **search_params}).json()['response']['items']
         owner_id_list = get_owner_id_list()
-        print(" !!!!! owner_id_list", owner_id_list)
         for person in peoples:
             if person['is_closed'] is False:
                 if str(person['id']) not in owner_id_list:
@@ -103,7 +100,8 @@ class Search:
                   'count': '10'
                   }
         try:
-            city_id = requests.get(self.url + 'database.getCities', params={**self.params, **search_params}).json()['response']['items'][0]['id']
+            city_id = requests.get(self.url + 'database.getCities', params={
+                **self.params, **search_params}).json()['response']['items'][0]['id']
             return city_id
         except IndexError:
             return 'ошибка, нет такого города\nВведите название города'
@@ -136,7 +134,6 @@ class VkSaver(Search):
         time.sleep(0.3)
         count_photos = response['response']['count']
         if count_photos >= 3:
-            links_dict_sorted[owner_id] = f"В альбоме {count_photos} фото"
             for items in response['response']['items']:
                 self.photo_stock[items['sizes'][-1]['url']] = items['likes']['count']
         else:
@@ -160,10 +157,6 @@ class VkSaver(Search):
                 self.candidates_dict[owner_id[-1]] = result
         links_dict.clear()
         return self.candidates_dict
-
-    @staticmethod
-    def output():
-        return str(list(links_dict_sorted.values()))
 
 
 if __name__ == '__main__':

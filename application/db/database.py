@@ -6,7 +6,6 @@ engine = sqlalchemy.create_engine(f"postgresql://{DB['db_owner']}:{DB['password'
 
 connection = engine.connect()
 user_id = []
-# owner_id_list = []
 
 
 def get_user_info(owner_id: int, user_name: str):
@@ -79,9 +78,22 @@ def output_search_result(number_of_candidates):
         name = f'{line[1]} {line[2]}'
         add_owner_id = f"""INSERT INTO viewed_candidates (owner_id, name) VALUES ({int(line[0])}, '{name}')"""
         connection.execute(add_owner_id)
-        joined_line = f'{name} Photo_1: {line[3]} Photo_2: {line[4]} Photo_3: {line[-1]}'
+        joined_line = f'ID:{int(line[0])} | {name} Photo_1: {line[3]} Photo_2: {line[4]} Photo_3: {line[-1]}'
+        temp_list.append(int(line[0]))
         temp_list.append(joined_line)
     return temp_list
+
+
+def add_favorite(owner_id: int, data: list):
+    connection.execute(f"""INSERT INTO favorites (owner_id, photo_link)
+                        VALUES ({owner_id}, '{data}')""")
+    return 'favorite added'
+
+
+def add_to_ban_list(owner_id: int):
+    connection.execute(f"""INSERT INTO ban_list (owner_id)
+                            VALUES ({owner_id})""")
+    return 'add to ban list'
 
 
 def clear_database():
